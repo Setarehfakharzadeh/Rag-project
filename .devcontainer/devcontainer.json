@@ -1,0 +1,18 @@
+{
+    "name": "RAG Chat Interface",
+    "image": "mcr.microsoft.com/devcontainers/python:3.11",
+    "forwardPorts": [5001],
+    "postCreateCommand": "pip install -r backend/requirements.txt",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance"
+            ]
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/python:1": {}
+    },
+    "postStartCommand": "cd backend && python -m flask run --port 5001 --host 0.0.0.0"
+} 
