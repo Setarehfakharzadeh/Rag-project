@@ -1,4 +1,3 @@
-
 A sophisticated chat interface implementing Retrieval-Augmented Generation (RAG) with a large language model for enhanced conversational AI capabilities.
 
 **Author**: [Setarehfakharzadeh](https://github.com/Setarehfakharzadeh)
@@ -81,14 +80,35 @@ npm start
 The frontend will be available at http://localhost:3000
 
 ## 🧪 Testing
+
+### Frontend Tests
+The frontend includes comprehensive test coverage using Jest and React Testing Library:
+
+```bash
+# Navigate to the frontend directory
+cd frontend
+
+# Run tests
+npm test
+
+# Run tests without watch mode
+npm test -- --watchAll=false
+
+# Or use the provided script
+./run-tests.sh
+```
+
+The frontend tests cover:
+- Component rendering
+- User interactions (typing, clicking buttons)
+- API integration
+- Error handling
+
+### Backend Tests
 ```bash
 # Backend tests
 cd backend
 python -m pytest tests/
-
-# Frontend tests
-cd frontend
-npm test
 ```
 
 ## 📝 Project Structure
