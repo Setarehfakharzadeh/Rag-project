@@ -15,6 +15,7 @@ This project combines a modern React frontend with a Flask backend to create an 
 
 - **Large Language Model Integration**: Utilizes StableBeluga-7B (4GB quantized model) for generating responses
 - **RAG Implementation**: Enhanced response generation with context retrieval
+- **Model Context Protocol Integration**: Specialized knowledge base for MCP documentation
 - **Modern Tech Stack**: React frontend with TypeScript + Flask backend
 - **Real-time Chat Interface**: Responsive and user-friendly design
 - **DevContainer Support**: Easy development environment setup
@@ -30,6 +31,8 @@ This project combines a modern React frontend with a Flask backend to create an 
 - Flask (Python)
 - StableBeluga-7B Language Model
 - RAG implementation for context-aware responses
+- Sentence Transformers for embeddings
+- Web crawling capabilities for MCP documentation
 
 ## 📦 Installation
 
@@ -63,6 +66,20 @@ cd frontend
 npm install
 ```
 
+### Crawl MCP Documentation (Optional)
+To create the RAG knowledge base for the Model Context Protocol:
+
+```bash
+cd backend
+python crawl_mcp.py
+```
+
+This will:
+1. Crawl the MCP documentation website
+2. Extract and process content
+3. Generate embeddings for RAG
+4. Save data for use by the chat interface
+
 ## 🚀 Running the Application
 
 ### Start Backend
@@ -80,6 +97,16 @@ npm start
 The frontend will be available at http://localhost:3000
 
 ## 🧪 Testing
+
+### RAG Testing
+To test the retrieval capabilities with MCP documentation:
+
+```bash
+cd backend
+python test_rag.py
+```
+
+This script tests the retrieval of relevant MCP documentation for sample queries.
 
 ### Frontend Tests
 The frontend includes comprehensive test coverage using Jest and React Testing Library:
@@ -116,15 +143,18 @@ python -m pytest tests/
 .
 ├── frontend/                # React frontend application
 │   ├── src/                # Source files
+│   │   ├── __tests__/     # Frontend tests
 │   ├── public/             # Public assets
 │   └── package.json        # Dependencies
 ├── backend/                # Flask backend
-│   ├── app.py             # Main application file
-│   ├── templates/         # HTML templates
-│   ├── static/           # Static files
-│   └── requirements.txt   # Python dependencies
-├── .devcontainer/         # Development container configuration
-└── .github/              # GitHub Actions workflows
+│   ├── app.py              # Main application file
+│   ├── crawl_mcp.py        # Web crawler for MCP docs
+│   ├── test_rag.py         # RAG testing utilities
+│   ├── templates/          # HTML templates
+│   ├── static/             # Static files
+│   └── requirements.txt    # Python dependencies
+├── .devcontainer/          # Development container configuration
+└── .github/                # GitHub Actions workflows
 ```
 
 ## 🤝 Contributing
@@ -135,10 +165,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## ⚠️ Important Notes
 - The language model file is large (~4GB) and must be downloaded separately
+- MCP documentation crawling requires internet access
 - Ensure sufficient RAM is available when running the application
 - The model may take a few moments to load on first startup
 
 ## 🔗 Links
 - [GitHub Repository](https://github.com/Setarehfakharzadeh/Rag-project)
 - [Issues](https://github.com/Setarehfakharzadeh/Rag-project/issues)
-- [StableBeluga-7B Model](https://huggingface.co/TheBloke/StableBeluga-7B-GGUF) 
+- [StableBeluga-7B Model](https://huggingface.co/TheBloke/StableBeluga-7B-GGUF)
+- [Model Context Protocol](https://modelcontextprotocol.io) 
