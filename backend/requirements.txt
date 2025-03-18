@@ -6,3 +6,4 @@ llama-cpp-python==0.1.77
 sentence-transformers==2.2.2
 torch==2.0.1
 beautifulsoup4==4.12.2
+scikit-learn==1.2.2
