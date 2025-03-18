@@ -1,86 +1,118 @@
 # RAG Chat Interface
 
-A chat interface built with React frontend and Flask backend, using the TinyLlama model for responses.
+A sophisticated chat interface implementing Retrieval-Augmented Generation (RAG) with a large language model for enhanced conversational AI capabilities.
 
-## Project Structure
+## 🤖 About the Project
 
-```
-Rag final/
-├── backend/         # Flask backend
-├── frontend/        # React frontend
-└── README.md       # This file
-```
+This project combines a modern React frontend with a Flask backend to create an intelligent chat interface powered by the StableBeluga-7B language model. The system uses RAG (Retrieval-Augmented Generation) to provide more accurate and context-aware responses.
 
-## Setup Instructions
+### Key Features
+
+- **Large Language Model Integration**: Utilizes StableBeluga-7B (4GB quantized model) for generating responses
+- **RAG Implementation**: Enhanced response generation with context retrieval
+- **Modern Tech Stack**: React frontend with TypeScript + Flask backend
+- **Real-time Chat Interface**: Responsive and user-friendly design
+- **DevContainer Support**: Easy development environment setup
+
+## 🛠️ Technology Stack
+
+### Frontend
+- React with TypeScript
+- Modern CSS for styling
+- Real-time communication with backend
+
+### Backend
+- Flask (Python)
+- StableBeluga-7B Language Model
+- RAG implementation for context-aware responses
+
+## 📦 Installation
+
+### Prerequisites
+- Python 3.8+
+- Node.js 14+
+- 8GB+ RAM recommended
+
+### Language Model Setup
+Due to GitHub's file size limitations, the language model file (`stablebeluga-7b.Q4_K_M.gguf`) is not included in this repository. To use this project:
+
+1. Download the model:
+   ```bash
+   # Download from Hugging Face
+   wget https://huggingface.co/TheBloke/StableBeluga-7B-GGUF/resolve/main/stablebeluga-7b.Q4_K_M.gguf
+   ```
+
+2. Place the downloaded file in the project root directory.
 
 ### Backend Setup
-
-1. Create a Python virtual environment:
-```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
-
-2. Install backend dependencies:
 ```bash
 cd backend
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-3. Start the Flask server:
-```bash
-python -m flask run --port 5001
-```
-
 ### Frontend Setup
-
-1. Install Node.js dependencies:
 ```bash
 cd frontend
 npm install
 ```
 
-2. Start the React development server:
+## 🚀 Running the Application
+
+### Start Backend
 ```bash
+cd backend
+python app.py
+```
+The backend will start on http://localhost:5001
+
+### Start Frontend
+```bash
+cd frontend
 npm start
 ```
+The frontend will be available at http://localhost:3000
 
-The application will be available at:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5001
+## 🧪 Testing
+```bash
+# Backend tests
+cd backend
+python -m pytest tests/
 
-## Features
+# Frontend tests
+cd frontend
+npm test
+```
 
-- Real-time chat interface
-- AI-powered responses using TinyLlama model
-- Modern React frontend with TypeScript
-- RESTful Flask backend
-- Clean and responsive UI
+## 📝 Project Structure
+```
+.
+├── frontend/                # React frontend application
+│   ├── src/                # Source files
+│   ├── public/             # Public assets
+│   └── package.json        # Dependencies
+├── backend/                # Flask backend
+│   ├── app.py             # Main application file
+│   ├── templates/         # HTML templates
+│   ├── static/           # Static files
+│   └── requirements.txt   # Python dependencies
+├── .devcontainer/         # Development container configuration
+└── .github/              # GitHub Actions workflows
+```
 
-## Dependencies
+## 🤝 Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-### Backend
-- Flask
-- Flask-CORS
-- Transformers
-- PyTorch
-- Accelerate
+## 📄 License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-### Frontend
-- React
-- TypeScript
-- Axios
-- React Scripts
+## ⚠️ Important Notes
+- The language model file is large (~4GB) and must be downloaded separately
+- Ensure sufficient RAM is available when running the application
+- The model may take a few moments to load on first startup
 
-## Development
-
-To modify the application:
-1. Backend code is in `backend/app.py`
-2. Frontend components are in `frontend/src/components/`
-3. Styles are in corresponding `.css` files
-
-## Notes
-
-- The backend uses TinyLlama, a smaller language model suitable for testing and development
-- Make sure all dependencies are installed before running the application
-- The frontend and backend must both be running for the application to work properly 
+## 🔗 Links
+- [GitHub Repository](https://github.com/Setarehfakharzadeh/Rag-project)
+- [Issues](https://github.com/Setarehfakharzadeh/Rag-project/issues)
+- [StableBeluga-7B Model](https://huggingface.co/TheBloke/StableBeluga-7B-GGUF) 
