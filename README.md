@@ -6,7 +6,24 @@ A sophisticated chat interface implementing Retrieval-Augmented Generation (RAG)
 
 ##  About the Project
 
-This project combines a modern React frontend with a Flask backend to create an intelligent chat interface powered by the StableBeluga-7B language model. The system uses RAG (Retrieval-Augmented Generation) to provide more accurate and context-aware responses.
+This project combines a modern React frontend with a Flask backend to create an intelligent chat interface powered by the StableBeluga-7B language model. The system uses RAG (Retrieval-Augmented Generation) to enhance responses by processing and retrieving information from the Model Context Protocol (MCP) documentation.
+
+### RAG Implementation Details
+
+The RAG system works by:
+1. Processing and chunking Model Context Protocol documentation into smaller, manageable pieces
+2. Using the all-MiniLM-L6-v2 sentence transformer model to create embeddings
+3. Implementing efficient document retrieval based on semantic similarity
+4. Enhancing the StableBeluga-7B responses with relevant context from the documentation
+
+### Data Processing
+- Source: Model Context Protocol (MCP) documentation, including:
+  - Server quickstart guide
+  - Client implementation guide
+  - Latest specifications
+- Document Processing: Content is split into optimal chunks of up to 512 characters
+- Embedding Model: all-MiniLM-L6-v2 for efficient semantic search
+- Storage: Processed documents and embeddings are indexed for fast retrieval
 
 ### Key Features
 
