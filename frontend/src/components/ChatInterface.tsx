@@ -3,10 +3,13 @@ import { Message, ChatResponse } from '../types/chat';
 import axios from 'axios';
 import './ChatInterface.css';
 
+type ModelType = 'local' | 'openai' | 'gemini';
+
 const ChatInterface: React.FC = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [selectedModel, setSelectedModel] = useState<ModelType>('local');
     const chatBoxRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -34,7 +37,8 @@ const ChatInterface: React.FC = () => {
 
         try {
             const response = await axios.post<ChatResponse>('http://localhost:5001/api/chat', {
-                message: input
+                message: input,
+                model: selectedModel
             });
 
             if (response.data.success && response.data.response) {
@@ -66,8 +70,25 @@ const ChatInterface: React.FC = () => {
         }
     };
 
+    const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedModel(e.target.value as ModelType);
+    };
+
     return (
         <div className="chat-container">
+            <div className="model-selector">
+                <label htmlFor="model-select">Select Model: </label>
+                <select 
+                    id="model-select" 
+                    value={selectedModel} 
+                    onChange={handleModelChange}
+                    disabled={isLoading}
+                >
+                    <option value="local">StableBeluga (Local)</option>
+                    <option value="openai">OpenAI GPT</option>
+                    <option value="gemini">Google Gemini</option>
+                </select>
+            </div>
             <div className="chat-box" ref={chatBoxRef}>
                 {messages.map((message, index) => (
                     <div
@@ -108,4 +129,4 @@ const ChatInterface: React.FC = () => {
     );
 };
 
-export default ChatInterface; 
+export default ChatInterface;

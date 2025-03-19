@@ -4,6 +4,8 @@ export interface Message {
     timestamp: Date;
 }
 
+export type ModelType = 'local' | 'openai' | 'gemini';
+
 export interface ChatResponse {
     success: boolean;
     response?: string;

@@ -21,12 +21,17 @@ The RAG system works by:
 
 ### Multiple Model Support
 
-The project supports two different language model backends:
+The project supports three different language model backends:
 
 1. **StableBeluga-7B** (Default): A locally-run 7B parameter model that runs entirely on your machine without requiring external API calls.
 
 2. **OpenAI GPT Models**: An alternative implementation that uses OpenAI's API (GPT-3.5-Turbo/GPT-4) for generating responses. This option requires:
    - An OpenAI API key
+   - Internet connectivity
+   - Setting up environment variables
+
+3. **Google Gemini API**: Another cloud-based alternative that uses Google's Gemini Pro model. This option requires:
+   - A Google Gemini API key
    - Internet connectivity
    - Setting up environment variables
 
@@ -43,6 +48,7 @@ The project supports two different language model backends:
 
 - **Large Language Model Integration**: Utilizes StableBeluga-7B (4GB quantized model) for generating responses
 - **OpenAI Integration**: Alternative implementation using OpenAI's GPT models
+- **Google Gemini API Integration**: Alternative implementation using Google's Gemini Pro model
 - **RAG Implementation**: Enhanced response generation with context retrieval
 - **Model Context Protocol Integration**: Specialized knowledge base for MCP documentation
 - **Modern Tech Stack**: React frontend with TypeScript + Flask backend
@@ -60,6 +66,7 @@ The project supports two different language model backends:
 - Flask (Python)
 - StableBeluga-7B Language Model
 - OpenAI API integration (optional)
+- Google Gemini API integration (optional)
 - RAG implementation for context-aware responses
 - Sentence Transformers for embeddings
 - Web crawling capabilities for MCP documentation
@@ -71,6 +78,7 @@ The project supports two different language model backends:
 - Node.js 14+
 - 8GB+ RAM recommended
 - OpenAI API key (optional, for using OpenAI models)
+- Google Gemini API key (optional, for using Google Gemini API)
 
 ### Language Model Setup
 Due to GitHub's file size limitations, the language model file (`stablebeluga-7b.Q4_K_M.gguf`) is not included in this repository. To use this project:
@@ -95,6 +103,20 @@ To use the OpenAI integration:
 2. Install the OpenAI Python package:
    ```bash
    pip install openai
+   ```
+
+### Google Gemini API Setup (Optional)
+To use the Google Gemini API integration:
+
+1. Create a `.env` file in the backend directory:
+   ```bash
+   cd backend
+   echo "GOOGLE_GEMINI_API_KEY=your_api_key_here" > .env
+   ```
+
+2. Install the Google Gemini API Python package:
+   ```bash
+   pip install google-gemini-api
    ```
 
 ### Backend Setup
@@ -147,6 +169,14 @@ To run the application with OpenAI models instead of StableBeluga:
 ```bash
 cd backend
 python generative_rag.py
+```
+
+### Using Google Gemini API (Optional)
+To run the application with Google Gemini API instead of StableBeluga:
+
+```bash
+cd backend
+python google_gemini_rag.py
 ```
 
 ## 🧪 Testing
@@ -202,6 +232,7 @@ python -m pytest tests/
 ├── backend/                # Flask backend
 │   ├── app.py              # Main application file (StableBeluga)
 │   ├── generative_rag.py   # OpenAI integration for RAG
+│   ├── google_gemini_rag.py # Google Gemini API integration for RAG
 │   ├── direct_openai_rag.py # Direct OpenAI API implementation
 │   ├── crawl_mcp.py        # Web crawler for MCP docs
 │   ├── test_rag.py         # RAG testing utilities
@@ -224,6 +255,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Ensure sufficient RAM is available when running the application
 - The model may take a few moments to load on first startup
 - Using OpenAI models requires an API key and internet connectivity
+- Using Google Gemini API requires an API key and internet connectivity
 
 ## 🔗 Links
 - [GitHub Repository](https://github.com/Setarehfakharzadeh/Rag-project)
@@ -231,3 +263,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [StableBeluga-7B Model](https://huggingface.co/TheBloke/StableBeluga-7B-GGUF)
 - [Model Context Protocol](https://modelcontextprotocol.io) 
 - [OpenAI API Documentation](https://platform.openai.com/docs/api-reference)
+- [Google Gemini API Documentation](https://cloud.google.com/gemini/docs)

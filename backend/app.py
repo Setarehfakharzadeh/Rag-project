@@ -6,6 +6,18 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import torch
 from llama_cpp import Llama
+from dotenv import load_dotenv
+import sys
+
+# Try to import the generative_rag module for OpenAI and Gemini integration
+try:
+    from generative_rag import generate_openai_response, generate_gemini_response
+    GENERATIVE_RAG_AVAILABLE = True
+except ImportError:
+    GENERATIVE_RAG_AVAILABLE = False
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -94,19 +106,13 @@ def chat():
     try:
         data = request.json
         user_message = data.get('message', '')
+        model_choice = data.get('model', 'local')  # Default to local model
         
         # Check if we're in testing mode
         if app.config.get('TESTING', False):
             return jsonify({
                 'success': True,
                 'response': 'This is a test response. The actual model is not loaded in testing mode.'
-            })
-        
-        # Check if models are loaded
-        if llm is None or embedding_model is None:
-            return jsonify({
-                'success': True,
-                'response': 'The language model or embedding model is not available. Please check server logs.'
             })
         
         # Retrieve relevant documents for RAG
@@ -124,36 +130,71 @@ def chat():
                 context += f"{chunk['content']}\n\n"
                 context += f"(Source: {chunk['source']})\n\n"
         
-        # Create prompt with retrieved context
-        if context:
-            prompt = f"""You are a helpful assistant specializing in the Model Context Protocol.
-            
+        # Handle different model choices
+        if model_choice == 'openai' and GENERATIVE_RAG_AVAILABLE:
+            # Use OpenAI API
+            try:
+                model_response = generate_openai_response(user_message, relevant_chunks)
+                if not model_response:
+                    raise Exception("Failed to get response from OpenAI API")
+            except Exception as e:
+                print(f"Error generating response with OpenAI: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': f"OpenAI API error: {str(e)}"
+                }), 400
+                
+        elif model_choice == 'gemini' and GENERATIVE_RAG_AVAILABLE:
+            # Use Google Gemini API
+            try:
+                model_response = generate_gemini_response(user_message, relevant_chunks)
+                if not model_response:
+                    raise Exception("Failed to get response from Gemini API")
+            except Exception as e:
+                print(f"Error generating response with Gemini: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': f"Gemini API error: {str(e)}"
+                }), 400
+                
+        else:
+            # Use local StableBeluga model
+            if llm is None:
+                return jsonify({
+                    'success': True,
+                    'response': 'The language model is not available. Please check server logs or try using OpenAI or Gemini API instead.'
+                })
+                
+            # Create prompt with retrieved context
+            if context:
+                prompt = f"""You are a helpful assistant specializing in the Model Context Protocol.
+                
 {context}
 
 Based on the information above, please respond to the following question:
 {user_message}
 
 If the information provided doesn't contain the answer, please say so and provide general information about MCP if possible."""
-        else:
-            prompt = f"""You are a helpful assistant specializing in the Model Context Protocol.
+            else:
+                prompt = f"""You are a helpful assistant specializing in the Model Context Protocol.
 
 Please respond to the following question about MCP (Model Context Protocol):
 {user_message}
 
 If you don't have specific information, please let the user know and suggest they check the official documentation at modelcontextprotocol.io."""
-        
-        # Generate response
-        try:
-            response = llm(
-                prompt,
-                max_tokens=1024,
-                temperature=0.7,
-                stop=["User:", "\n\n\n"]
-            )
-            model_response = response['choices'][0]['text'].strip()
-        except Exception as e:
-            print(f"Error generating response: {e}")
-            model_response = "I apologize, but I encountered an error while generating a response. Please try again later."
+            
+            # Generate response with local model
+            try:
+                response = llm(
+                    prompt,
+                    max_tokens=1024,
+                    temperature=0.7,
+                    stop=["User:", "\n\n\n"]
+                )
+                model_response = response['choices'][0]['text'].strip()
+            except Exception as e:
+                print(f"Error generating response with local model: {e}")
+                model_response = "I apologize, but I encountered an error while generating a response. Please try again later or try using OpenAI or Gemini API instead."
         
         return jsonify({
             'success': True,
