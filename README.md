@@ -19,6 +19,17 @@ The RAG system works by:
 3. Implementing efficient document retrieval based on semantic similarity
 4. Enhancing the StableBeluga-7B responses with relevant context from the documentation
 
+### Multiple Model Support
+
+The project supports two different language model backends:
+
+1. **StableBeluga-7B** (Default): A locally-run 7B parameter model that runs entirely on your machine without requiring external API calls.
+
+2. **OpenAI GPT Models**: An alternative implementation that uses OpenAI's API (GPT-3.5-Turbo/GPT-4) for generating responses. This option requires:
+   - An OpenAI API key
+   - Internet connectivity
+   - Setting up environment variables
+
 ### Data Processing
 - Source: Model Context Protocol (MCP) documentation, including:
   - Server quickstart guide
@@ -31,6 +42,7 @@ The RAG system works by:
 ### Key Features
 
 - **Large Language Model Integration**: Utilizes StableBeluga-7B (4GB quantized model) for generating responses
+- **OpenAI Integration**: Alternative implementation using OpenAI's GPT models
 - **RAG Implementation**: Enhanced response generation with context retrieval
 - **Model Context Protocol Integration**: Specialized knowledge base for MCP documentation
 - **Modern Tech Stack**: React frontend with TypeScript + Flask backend
@@ -47,6 +59,7 @@ The RAG system works by:
 ### Backend
 - Flask (Python)
 - StableBeluga-7B Language Model
+- OpenAI API integration (optional)
 - RAG implementation for context-aware responses
 - Sentence Transformers for embeddings
 - Web crawling capabilities for MCP documentation
@@ -57,6 +70,7 @@ The RAG system works by:
 - Python 3.8+
 - Node.js 14+
 - 8GB+ RAM recommended
+- OpenAI API key (optional, for using OpenAI models)
 
 ### Language Model Setup
 Due to GitHub's file size limitations, the language model file (`stablebeluga-7b.Q4_K_M.gguf`) is not included in this repository. To use this project:
@@ -68,6 +82,20 @@ Due to GitHub's file size limitations, the language model file (`stablebeluga-7b
    ```
 
 2. Place the downloaded file in the project root directory.
+
+### OpenAI API Setup (Optional)
+To use the OpenAI integration:
+
+1. Create a `.env` file in the backend directory:
+   ```bash
+   cd backend
+   echo "OPENAI_API_KEY=your_api_key_here" > .env
+   ```
+
+2. Install the OpenAI Python package:
+   ```bash
+   pip install openai
+   ```
 
 ### Backend Setup
 ```bash
@@ -112,6 +140,14 @@ cd frontend
 npm start
 ```
 The frontend will be available at http://localhost:3000
+
+### Using OpenAI Models (Optional)
+To run the application with OpenAI models instead of StableBeluga:
+
+```bash
+cd backend
+python generative_rag.py
+```
 
 ## 🧪 Testing
 
@@ -164,7 +200,9 @@ python -m pytest tests/
 │   ├── public/             # Public assets
 │   └── package.json        # Dependencies
 ├── backend/                # Flask backend
-│   ├── app.py              # Main application file
+│   ├── app.py              # Main application file (StableBeluga)
+│   ├── generative_rag.py   # OpenAI integration for RAG
+│   ├── direct_openai_rag.py # Direct OpenAI API implementation
 │   ├── crawl_mcp.py        # Web crawler for MCP docs
 │   ├── test_rag.py         # RAG testing utilities
 │   ├── templates/          # HTML templates
@@ -185,9 +223,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - MCP documentation crawling requires internet access
 - Ensure sufficient RAM is available when running the application
 - The model may take a few moments to load on first startup
+- Using OpenAI models requires an API key and internet connectivity
 
 ## 🔗 Links
 - [GitHub Repository](https://github.com/Setarehfakharzadeh/Rag-project)
 - [Issues](https://github.com/Setarehfakharzadeh/Rag-project/issues)
 - [StableBeluga-7B Model](https://huggingface.co/TheBloke/StableBeluga-7B-GGUF)
 - [Model Context Protocol](https://modelcontextprotocol.io) 
+- [OpenAI API Documentation](https://platform.openai.com/docs/api-reference)
