@@ -3,123 +3,71 @@ from flask_cors import CORS
 import json
 import os
 import numpy as np
-from sentence_transformers import SentenceTransformer
-import torch
-from llama_cpp import Llama
 from dotenv import load_dotenv
-import sys
+import google.generativeai as genai
+from FlagEmbedding import FlagModel
 
-# Try to import the generative_rag module for OpenAI and Gemini integration
-try:
-    from generative_rag import generate_openai_response, generate_gemini_response
-    GENERATIVE_RAG_AVAILABLE = True
-except ImportError:
-    GENERATIVE_RAG_AVAILABLE = False
-
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
-# Load the model
-MODEL_PATH = "../stablebeluga-7b.Q4_K_M.gguf"
+# Initialize Gemini
+GENAI_API_KEY = os.getenv('GEMINI_API_KEY')
+genai.configure(api_key=GENAI_API_KEY)
+# Update model name to the latest version
+gemini_model = genai.GenerativeModel('gemini-1.5-pro')
 
-# Only load the model if not in testing mode
-if not app.config.get('TESTING', False):
-    try:
-        llm = Llama(
-            model_path=MODEL_PATH,
-            n_ctx=2048,
-            n_gpu_layers=-1
-        )
-    except Exception as e:
-        print(f"Warning: Could not load language model: {e}")
-        llm = None
-else:
-    llm = None
+# Initialize RAG components
+embeddings_model_bge = FlagModel('BAAI/bge-base-en-v1.5', use_fp16=True)
 
-# Load the embedding model
-if not app.config.get('TESTING', False):
-    try:
-        embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-    except Exception as e:
-        print(f"Warning: Could not load embedding model: {e}")
-        embedding_model = None
-else:
-    embedding_model = None
-
-# Load MCP documentation chunks
+# Load document chunks
 MCP_CHUNKS_PATH = "mcp_chunks.json"
+try:
+    with open(MCP_CHUNKS_PATH, "r") as f:
+        mcp_chunks = json.load(f)
+        print(f"Loaded {len(mcp_chunks)} document chunks")
+        
+    # Generate embeddings
+    document_texts = [chunk["content"] for chunk in mcp_chunks]
+    embeddings_bge = embeddings_model_bge.encode(document_texts)
+    print(f"Created embeddings for {len(document_texts)} chunks")
+except Exception as e:
+    print(f"Error loading document chunks: {e}")
+    mcp_chunks = []
+    embeddings_bge = np.array([])
 
-# If the chunks file doesn't exist yet, create a placeholder
-if not os.path.exists(MCP_CHUNKS_PATH):
-    with open(MCP_CHUNKS_PATH, "w") as f:
-        json.dump([], f)
+PROMPT_TEMPLATE = """You are a Senior Software Developer at Microsoft. Use the context to answer the question. Give detailed answers.
 
-with open(MCP_CHUNKS_PATH, "r") as f:
-    mcp_chunks = json.load(f)
+Context:
+{context}
 
-# Create embeddings for chunks (if not already created)
-EMBEDDINGS_PATH = "mcp_embeddings.npy"
-if os.path.exists(EMBEDDINGS_PATH) and len(mcp_chunks) > 0 and not app.config.get('TESTING', False):
-    chunk_embeddings = np.load(EMBEDDINGS_PATH)
-else:
-    # Create embeddings if chunks exist and not in testing mode
-    if len(mcp_chunks) > 0 and embedding_model is not None and not app.config.get('TESTING', False):
-        texts = [chunk["content"] for chunk in mcp_chunks]
-        chunk_embeddings = embedding_model.encode(texts)
-        np.save(EMBEDDINGS_PATH, chunk_embeddings)
-    else:
-        chunk_embeddings = np.array([])
+Question: {question}
 
-def retrieve_relevant_chunks(query, top_k=3):
-    """Retrieve the most relevant chunks for a query"""
-    if len(mcp_chunks) == 0:
-        return []
-    
-    # Check if embedding model is available
-    if embedding_model is None:
-        return []
-    
-    # Get query embedding
-    query_embedding = embedding_model.encode(query)
-    
-    # Check if chunk embeddings exist
-    if len(chunk_embeddings) == 0:
-        return []
-    
-    # Calculate similarity
-    similarities = np.dot(chunk_embeddings, query_embedding)
-    
-    # Get top k chunks
-    top_indices = np.argsort(similarities)[-top_k:][::-1]
-    
-    return [mcp_chunks[i] for i in top_indices]
+Answer:"""
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/api/chat', methods=['POST'])
-def chat():
+@app.route('/api/send_message', methods=['POST'])
+def send_message():
+    data = request.get_json()
+    user_message = data['message']
+    model_choice = data.get('model', 'local')  # Default to local model
+
     try:
-        data = request.json
-        user_message = data.get('message', '')
-        model_choice = data.get('model', 'local')  # Default to local model
+        # RAG process
+        emb_bge_query = embeddings_model_bge.encode([user_message])
+        scores = np.dot(embeddings_bge, emb_bge_query.T).squeeze()
         
-        # Check if we're in testing mode
-        if app.config.get('TESTING', False):
-            return jsonify({
-                'success': True,
-                'response': 'This is a test response. The actual model is not loaded in testing mode.'
-            })
-        
-        # Retrieve relevant documents for RAG
-        try:
-            relevant_chunks = retrieve_relevant_chunks(user_message)
-        except Exception as e:
-            print(f"Error retrieving chunks: {e}")
+        # Get top chunks
+        top_k = 3
+        if len(scores) > 0:
+            top_indices = np.argsort(-scores)[:top_k]
+            relevant_chunks = [mcp_chunks[i] for i in top_indices]
+        else:
             relevant_chunks = []
         
         # Format context from relevant chunks
@@ -130,82 +78,64 @@ def chat():
                 context += f"{chunk['content']}\n\n"
                 context += f"(Source: {chunk['source']})\n\n"
         
-        # Handle different model choices
-        if model_choice == 'openai' and GENERATIVE_RAG_AVAILABLE:
-            # Use OpenAI API
-            try:
-                model_response = generate_openai_response(user_message, relevant_chunks)
-                if not model_response:
-                    raise Exception("Failed to get response from OpenAI API")
-            except Exception as e:
-                print(f"Error generating response with OpenAI: {e}")
-                return jsonify({
-                    'success': False,
-                    'error': f"OpenAI API error: {str(e)}"
-                }), 400
-                
-        elif model_choice == 'gemini' and GENERATIVE_RAG_AVAILABLE:
-            # Use Google Gemini API
-            try:
-                model_response = generate_gemini_response(user_message, relevant_chunks)
-                if not model_response:
-                    raise Exception("Failed to get response from Gemini API")
-            except Exception as e:
-                print(f"Error generating response with Gemini: {e}")
-                return jsonify({
-                    'success': False,
-                    'error': f"Gemini API error: {str(e)}"
-                }), 400
-                
+        # Simple response for now (no LLM)
+        if context:
+            response = f"Here's what I found about your query: {user_message}\n\n{context}"
         else:
-            # Use local StableBeluga model
-            if llm is None:
-                return jsonify({
-                    'success': True,
-                    'response': 'The language model is not available. Please check server logs or try using OpenAI or Gemini API instead.'
-                })
-                
-            # Create prompt with retrieved context
-            if context:
-                prompt = f"""You are a helpful assistant specializing in the Model Context Protocol.
-                
-{context}
-
-Based on the information above, please respond to the following question:
-{user_message}
-
-If the information provided doesn't contain the answer, please say so and provide general information about MCP if possible."""
-            else:
-                prompt = f"""You are a helpful assistant specializing in the Model Context Protocol.
-
-Please respond to the following question about MCP (Model Context Protocol):
-{user_message}
-
-If you don't have specific information, please let the user know and suggest they check the official documentation at modelcontextprotocol.io."""
-            
-            # Generate response with local model
-            try:
-                response = llm(
-                    prompt,
-                    max_tokens=1024,
-                    temperature=0.7,
-                    stop=["User:", "\n\n\n"]
-                )
-                model_response = response['choices'][0]['text'].strip()
-            except Exception as e:
-                print(f"Error generating response with local model: {e}")
-                model_response = "I apologize, but I encountered an error while generating a response. Please try again later or try using OpenAI or Gemini API instead."
+            response = f"I couldn't find specific information about: {user_message}"
         
         return jsonify({
             'success': True,
-            'response': model_response
+            'response': response
         })
     except Exception as e:
-        print(f"Error in chat endpoint: {e}")
+        print(f"Error in send_message endpoint: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
-        }), 400
+        }), 500
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.get_json()
+        user_message = data['message']
+        model_choice = data.get('model', 'gemini')
+
+        # RAG process
+        query_embedding = embeddings_model_bge.encode([user_message])
+        scores = np.dot(embeddings_bge, query_embedding.T).squeeze()
+        
+        # Get top 3 relevant chunks
+        top_indices = np.argsort(-scores)[:3]
+        context_chunks = [mcp_chunks[i]["content"] for i in top_indices]
+        
+        # Format context
+        context_str = '\n###\n'.join(context_chunks)
+        
+        # Generate response
+        if model_choice == 'gemini':
+            prompt = PROMPT_TEMPLATE.format(
+                context=context_str,
+                question=user_message
+            )
+            response = gemini_model.generate_content(prompt)
+            answer = response.text
+        else:
+            answer = "Currently only Gemini model is supported"
+
+        return jsonify({
+            'success': True,
+            'response': answer
+        })
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    from waitress import serve
+    serve(app, host="0.0.0.0", port=5001)
